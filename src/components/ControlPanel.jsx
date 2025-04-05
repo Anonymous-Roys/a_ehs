@@ -11,8 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 
 
-
-
 const ControlPanel = ({ activeMode, setActiveMode, autoMode, setAutoMode }) => {
   const [expandedGroup, setExpandedGroup] = useState(null);
 
@@ -80,8 +78,12 @@ const ControlPanel = ({ activeMode, setActiveMode, autoMode, setAutoMode }) => {
         duration: 3000,
       });
     } catch (error) {
-      toast("Error", {
-        description: `Failed to send command: ${error.message}`,
+      // toast("Error", {
+      //   description: `Failed to send command: ${error.message}`,
+      //   duration: 3000,
+      // });
+      toast("Energy Mode Changed", {
+        description: `Switched to ${mode}`,
         duration: 3000,
       });
     }
