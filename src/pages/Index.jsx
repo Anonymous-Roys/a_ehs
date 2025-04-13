@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import PowerFlowCard from "../components/PowerFlowCard";
-import BatteryStatus from "../components/BatteryStatus";
-import SolarStatus from "../components/SolarStatus";
+import BatteryStatus from "../components/battery/BatteryStatus";
+import SolarStatus from "../components/solar/SolarStatus";
 import GridStatus from "../components/GridStatus";
 import LoadStatus from "../components/LoadStatus";
 import ControlPanel from "../components/ControlPanel";
@@ -11,6 +11,7 @@ import { BarChart3, Zap, TrendingUp, AlertTriangle } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import WeatherForecast from "../components/WeatherForecast";
 import QuickStats from "../components/QuickStats";
+import WindStatus from "../components/wind/WindStatus";
 
 
 const Index = () => {
@@ -75,6 +76,7 @@ const Index = () => {
           <BatteryStatus />
           <GridStatus />
           <LoadStatus />
+          <WindStatus/>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

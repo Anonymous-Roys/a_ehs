@@ -8,8 +8,8 @@ const GridStatus = () => {
   const [importing, setImporting] = useState(true);
   const [voltage, setVoltage] = useState(238);
   const [frequency, setFrequency] = useState(49.8);
-  const [usageHistory, setUsageHistory] = useState([18, 19, 20, 21, 22]);
-  const [showDetails, setShowDetails] = useState(false);
+  // const [usageHistory, setUsageHistory] = useState([18, 19, 20, 21, 22]);
+  // const [showDetails, setShowDetails] = useState(false);
   
   useEffect(() => {
     // Simulate grid usage changes
@@ -42,11 +42,11 @@ const GridStatus = () => {
   };
 
   return (
-    <Card className="grid-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card onClick={() => window.location.href="/grid-details"} className="grid-card cursor-pointer hover:from-sky-100 hover:to-sky-200 dark:hover:from-sky-900 dark:hover:to-sky-800 w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Grid Icon with Animation */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-indigo-100/70 dark:bg-indigo-900/20"></div>
             <div className="absolute inset-0 rounded-full opacity-70">
               {importing && (
@@ -60,7 +60,7 @@ const GridStatus = () => {
             {/* Grid icon */}
             <div className="relative">
               <Power 
-                className={`h-16 w-16 ${importing ? 'text-indigo-500' : 'text-gray-400'}`} 
+                className={`h-10 w-10 ${importing ? 'text-indigo-500' : 'text-gray-400'}`} 
                 strokeWidth={1.5} 
               />
               
@@ -102,7 +102,7 @@ const GridStatus = () => {
           {/* Status and Title */}
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-2">
-              <h3 className="text-2xl font-medium">Grid Connection</h3>
+              <h3 className="text-xl font-medium">Grid Connection</h3>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                 importing 
                   ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400' 
@@ -127,10 +127,10 @@ const GridStatus = () => {
                 {gridUsage}%
               </span>
             </div>
-            <div className="relative h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+            <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
                 value={gridUsage} 
-                className="h-3 transition-all duration-1000"
+                className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, #6366F1 0%, #818CF8 ${gridUsage}%)`,
                 }}
@@ -146,7 +146,7 @@ const GridStatus = () => {
           </div>
           
           {/* Mini Chart */}
-          <div className="w-full h-16 mt-2">
+          {/* <div className="w-full h-16 mt-2">
             <div className="text-xs text-muted-foreground mb-1 text-left">Import History</div>
             <div className="flex items-end justify-between h-12 gap-1">
               {usageHistory.map((value, index) => (
@@ -160,7 +160,7 @@ const GridStatus = () => {
                 ></div>
               ))}
             </div>
-          </div>
+          </div> */}
           
           {/* Metrics Row */}
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
@@ -181,16 +181,16 @@ const GridStatus = () => {
           </div>
           
           {/* Toggle Details Button */}
-          <button 
+          {/* <button 
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>{showDetails ? "Hide details" : "Show details"}</span>
             <ChevronUp className={`h-4 w-4 ml-1 transition-transform ${showDetails ? '' : 'rotate-180'}`} />
-          </button>
+          </button> */}
           
           {/* Expanded Details */}
-          {showDetails && (
+          {/* {showDetails && (
             <div className="w-full space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-sm animate-fade-in">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -225,7 +225,7 @@ const GridStatus = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </CardContent>
     </Card>

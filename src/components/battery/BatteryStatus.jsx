@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Battery, Clock, ArrowUp, ArrowDown, ChevronUp, Zap } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
+import { Progress } from "../ui/progress";
+import { Battery, Clock, ArrowUp, ArrowDown, ChevronUp, Zap, ArrowRight } from "lucide-react";
 
 const BatteryStatus = () => {
   const [batteryLevel, setBatteryLevel] = useState(27);
@@ -89,11 +89,11 @@ const BatteryStatus = () => {
   };
 
   return (
-    <Card className="battery-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card onClick={() => window.location.href="/battery-details"} className="battery-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:from-sky-100 hover:to-sky-200 cursor-pointer dark:hover:from-sky-900 dark:hover:to-sky-800">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Battery Icon with Animation */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
             <div className={`absolute inset-0 rounded-full ${getBatteryBgColor()} transition-colors duration-1000`}></div>
             <div className="absolute inset-0 rounded-full opacity-70">
               {charging && (
@@ -107,13 +107,13 @@ const BatteryStatus = () => {
             {/* Battery icon and charging indicator */}
             <div className="relative">
               <Battery 
-                className={`h-16 w-16 ${getBatteryColor()} transition-colors duration-1000`} 
+                className={`h-10 w-10 ${getBatteryColor()} transition-colors duration-1000`} 
                 strokeWidth={1.5}
               />
               
               {/* Battery fill animation */}
               <div 
-                className="absolute bottom-[4px] left-[4px] right-[6px] bg-current rounded transition-all duration-1000 ease-out"
+                className="absolute bottom-[13px] left-[4px] right-[11px] bg-current rounded transition-all duration-1000 ease-out"
                 style={{ 
                   height: `${Math.max(2, (batteryLevel / 100) * 24)}px`,
                   opacity: 0.5
@@ -173,10 +173,10 @@ const BatteryStatus = () => {
                 {batteryLevel}%
               </span>
             </div>
-            <div className="relative h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+            <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
                 value={batteryLevel} 
-                className="h-3 transition-all duration-1000"
+                className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${batteryLevel}%)`,
                 }}
@@ -192,7 +192,7 @@ const BatteryStatus = () => {
           </div>
           
           {/* Mini Chart */}
-          <div className="w-full h-16 mt-2">
+          {/* <div className="w-full h-16 mt-2">
             <div className="text-xs text-muted-foreground mb-1 text-left">Charge Level History</div>
             <div className="flex items-end justify-between h-12 gap-1">
               {chargeHistory.map((value, index) => (
@@ -207,7 +207,7 @@ const BatteryStatus = () => {
                 ></div>
               ))}
             </div>
-          </div>
+          </div> */}
           
           {/* Power Stats */}
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
@@ -228,16 +228,16 @@ const BatteryStatus = () => {
           </div>
           
           {/* Toggle Details Button */}
-          <button 
+          {/* <button 
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>{showDetails ? "Hide details" : "Show details"}</span>
             <ChevronUp className={`h-4 w-4 ml-1 transition-transform ${showDetails ? '' : 'rotate-180'}`} />
-          </button>
+          </button> */}
           
           {/* Expanded Details */}
-          {showDetails && (
+          {/* {showDetails && (
             <div className="w-full space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-sm animate-fade-in">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -273,8 +273,15 @@ const BatteryStatus = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
+        {/* <button 
+            onClick={() => window.location.href="/solar-details"}
+            className="flex items-center justify-center w-full p-2 mt-4 text-sm font-medium text-white bg-amber-500 rounded-md hover:bg-amber-600 transition-colors"
+          >
+            View Detailed Analytics
+            <ArrowRight className="h-4 w-4 ml-1" />
+          </button> */}
       </CardContent>
     </Card>
   );

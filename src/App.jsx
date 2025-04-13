@@ -11,6 +11,9 @@ import Alerts from "./pages/Alerts";
 import Controls from "./components/Controls";
 import Connection from "./pages/Connection";
 import { Toaster } from "sonner";
+import SolarDetailsPage from "./components/solar/SolarDetails";
+import BatteryDetails from "./pages/BatteryDetails";
+import LoadDetails from "./pages/LoadDetails";
 
 
 const queryClient = new QueryClient();
@@ -27,6 +30,11 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/a" element={<Alerts />} />
           <Route path="/c" element={<Controls />} />
+          <Route path="/solar-details" element={<SolarDetailsPage />} />
+          <Route path="/battery-details" element={<BatteryDetails />} />
+          <Route path="/grid-details" element={<BatteryDetails />} />
+          <Route path="/load-details" element={<LoadDetails />} />
+          <Route path="/wind-details" element={<BatteryDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

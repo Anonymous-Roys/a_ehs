@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Sun, Battery, ChevronUp, CloudSun } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
+import { Progress } from "../ui/progress";
+import { Sun, Battery, ChevronUp, CloudSun, ArrowRight } from "lucide-react";
 
 const SolarStatus = () => {
   const [solarOutput, setSolarOutput] = useState(68);
@@ -39,11 +39,13 @@ const SolarStatus = () => {
   };
 
   return (
-    <Card className="solar-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card onClick={() => window.location.href="/solar-details"} className="solar-card w-full shadow-lg border-0 overflow-hidden cursor-pointer transition-all duration-300 
+             bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800
+             hover:from-sky-100 hover:to-sky-200 dark:hover:from-sky-900 dark:hover:to-sky-800">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Solar Icon with Pulsing and Rotating Animation */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/30 dark:to-amber-800/20"></div>
             <div className={`absolute inset-0 rounded-full ${generating ? 'animate-pulse' : ''} opacity-70`}>
               {generating && (
@@ -54,7 +56,7 @@ const SolarStatus = () => {
               )}
             </div>
             <Sun 
-              className={`h-16 w-16 ${generating ? 'text-amber-500 animate-spin-slow' : 'text-gray-400'}`} 
+              className={`h-10 w-10 ${generating ? 'text-amber-500 animate-spin-slow' : 'text-gray-400'}`} 
               strokeWidth={1.5} 
               style={{ animationDuration: '30s' }}
             />
@@ -103,10 +105,10 @@ const SolarStatus = () => {
                 {solarOutput}%
               </span>
             </div>
-            <div className="relative h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+            <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
                 value={solarOutput} 
-                className="h-3 transition-all duration-1000"
+                className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, #FFB624 0%, #FFD700 ${solarOutput}%)`,
                 }}
@@ -122,7 +124,7 @@ const SolarStatus = () => {
           </div>
           
           {/* Mini Chart */}
-          <div className="w-full h-16 mt-2">
+          {/* <div className="w-full h-16 mt-2">
             <div className="text-xs text-muted-foreground mb-1 text-left">Today's Output Trend</div>
             <div className="flex items-end justify-between h-12 gap-1">
               {dailyTrend.map((value, index) => (
@@ -136,7 +138,7 @@ const SolarStatus = () => {
                 ></div>
               ))}
             </div>
-          </div>
+          </div> */}
           
           {/* Metrics Row */}
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
@@ -158,16 +160,16 @@ const SolarStatus = () => {
           </div>
           
           {/* Toggle Details Button */}
-          <button 
+          {/* <button 
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>{showDetails ? "Hide details" : "Show details"}</span>
             <ChevronUp className={`h-4 w-4 ml-1 transition-transform ${showDetails ? '' : 'rotate-180'}`} />
-          </button>
+          </button> */}
           
           {/* Expanded Details */}
-          {showDetails && (
+          {/* {showDetails && (
             <div className="w-full space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-sm animate-fade-in">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -188,8 +190,15 @@ const SolarStatus = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
+      {/* <button 
+            onClick={() => window.location.href="/solar-details"}
+            className="flex items-center justify-center w-full p-2 mt-4 text-sm font-medium text-white bg-amber-500 rounded-md hover:bg-amber-600 transition-colors"
+          >
+            View Detailed Analytics
+            <ArrowRight className="h-4 w-4 ml-1" />
+          </button> */}
       </CardContent>
     </Card>
   );

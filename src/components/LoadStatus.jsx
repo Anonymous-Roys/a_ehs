@@ -69,11 +69,11 @@ const LoadStatus = () => {
   };
 
   return (
-    <Card className="load-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <Card onClick={() => window.location.href="/load-details"} className="hover:from-sky-100 hover:to-sky-200 cursor-pointer dark:hover:from-sky-900 dark:hover:to-sky-800 load-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Home Icon with Animation */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
             <div className={`absolute inset-0 rounded-full ${
               loadUsage > 75 ? "bg-rose-100/70 dark:bg-rose-900/20" :
               loadUsage > 50 ? "bg-amber-100/70 dark:bg-amber-900/20" :
@@ -86,7 +86,7 @@ const LoadStatus = () => {
             {/* Home icon */}
             <div className="relative">
               <Home 
-                className={`h-16 w-16 ${getLoadColor()} transition-colors duration-1000`} 
+                className={`h-10 w-10 ${getLoadColor()} transition-colors duration-1000`} 
                 strokeWidth={1.5} 
               />
               
@@ -139,10 +139,10 @@ const LoadStatus = () => {
                 {loadUsage}%
               </span>
             </div>
-            <div className="relative h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+            <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
                 value={loadUsage} 
-                className="h-3 transition-all duration-1000"
+                className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${loadUsage}%)`,
                 }}
@@ -155,7 +155,7 @@ const LoadStatus = () => {
           </div>
           
           {/* Mini Chart */}
-          <div className="w-full h-16 mt-2">
+          {/* <div className="w-full h-16 mt-2">
             <div className="text-xs text-muted-foreground mb-1 text-left">Usage History</div>
             <div className="flex items-end justify-between h-12 gap-1">
               {loadHistory.map((value, index) => (
@@ -170,10 +170,10 @@ const LoadStatus = () => {
                 ></div>
               ))}
             </div>
-          </div>
+          </div> */}
           
           {/* Energy Sources */}
-          <div className="w-full pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
+          {/* <div className="w-full pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-xs text-muted-foreground mb-2 text-left">Energy Sources</div>
             <div className="h-4 w-full flex rounded-full overflow-hidden">
               <div 
@@ -195,7 +195,7 @@ const LoadStatus = () => {
                 <span className="text-xs text-white font-medium">Grid</span>
               </div>
             </div>
-          </div>
+          </div> */}
           
           {/* Basic Metrics */}
           <div className="w-full grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
@@ -210,16 +210,16 @@ const LoadStatus = () => {
           </div>
           
           {/* Toggle Details Button */}
-          <button 
+          {/* <button 
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>{showDetails ? "Hide details" : "Show details"}</span>
             <ChevronUp className={`h-4 w-4 ml-1 transition-transform ${showDetails ? '' : 'rotate-180'}`} />
-          </button>
+          </button> */}
           
           {/* Expanded Details */}
-          {showDetails && (
+          {/* {showDetails && (
             <div className="w-full space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700 text-sm animate-fade-in">
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Load Distribution</p>
@@ -252,7 +252,7 @@ const LoadStatus = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </CardContent>
     </Card>
