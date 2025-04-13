@@ -5,11 +5,12 @@ import {
   Sun, Layers, Settings, Download, Upload,
   ChevronLeft, BarChart3, LineChart, AlertTriangle
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Progress } from "../../components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import PowerSettings from "../../components/battery/PowerSettings";
 
 const BatteryDetails = () => {
   const [batteryLevel, setBatteryLevel] = useState(27);
@@ -27,6 +28,9 @@ const BatteryDetails = () => {
   const [temperature, setTemperature] = useState(22.4);
   const [powerMode, setPowerMode] = useState("smart");
   const [timeFrame, setTimeFrame] = useState("day");
+  const [reserveLevel, setReserveLevel] = useState(30); // reserve backup %
+const [allowFeedIn, setAllowFeedIn] = useState(true);
+
   
   // Ref for the header animation
   const headerRef = useRef(null);
@@ -221,7 +225,7 @@ const BatteryDetails = () => {
               <button className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
                 <RefreshCw className="h-5 w-5" />
               </button>
-              <button className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+              <button onClick={() => window.location.href="/battery-details/battery-settings"} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
@@ -266,7 +270,7 @@ const BatteryDetails = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+                {/* <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
                   <Progress 
                     value={batteryLevel} 
                     className="h-2 transition-all duration-1000"
@@ -274,17 +278,16 @@ const BatteryDetails = () => {
                       background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${batteryLevel}%)`,
                     }}
                   />
-                  {/* Animated glowing effect for the progress bar */}
                   {charging && (
                     <div 
                       className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent to-white/30 dark:to-white/20 animate-shimmer"
                       style={{ width: `${batteryLevel}%` }}
                     ></div>
                   )}
-                </div>
+                </div> */}
                 
                 {/* Quick Stats */}
-                <div className="flex mt-2 text-sm">
+                {/* <div className="flex mt-2 text-sm">
                   <div className="flex-1 text-center">
                     <p className="text-xs text-muted-foreground">Available</p>
                     <p className="font-medium">{Math.round(batteryCapacity * batteryLevel / 100 * 10) / 10} kWh</p>
@@ -299,7 +302,7 @@ const BatteryDetails = () => {
                       {charging ? "+" : "-"}{powerFlow} kW
                     </p>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -550,120 +553,6 @@ const BatteryDetails = () => {
             </CardContent>
           </Card>
         </div>
-        
-        {/* Power Settings */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Power Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Battery Power Mode */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Battery Power Mode</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <button 
-                    onClick={() => setPowerMode("smart")}
-                    className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      powerMode === "smart" 
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' 
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                    }`}
-                  >
-                    <Zap className="h-4 w-4 mx-auto mb-1" />
-                    Smart
-                  </button>
-                  <button 
-                    onClick={() => setPowerMode("reserve")}
-                    className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      powerMode === "reserve" 
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' 
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                    }`}
-                  >
-                    <Layers className="h-4 w-4 mx-auto mb-1" />
-                    Reserve
-                  </button>
-                  <button 
-                    onClick={() => setPowerMode("backup")}
-                    className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      powerMode === "backup" 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' 
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                    }`}
-                  >
-                    <AlertTriangle className="h-4 w-4 mx-auto mb-1" />
-                    Backup
-                  </button>
-                </div>
-              </div>
-              
-              {/* Time of Use Settings */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Time of Use Settings</p>
-                <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-medium">Peak Hours Optimization</h4>
-                      <p className="text-sm text-muted-foreground">Charge during off-peak, use battery during peak hours</p>
-                    </div>
-                    <div className="w-12 h-6 bg-blue-500 rounded-full relative cursor-pointer">
-                      <div className="absolute right-1 top-1 bottom-1 w-4 h-4 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <p className="text-xs text-muted-foreground mb-1">Peak Hours: 4:00 PM - 9:00 PM</p>
-                    <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-rose-500" style={{ width: '20%', marginLeft: '66%' }}></div>
-                    </div>
-                    <div className="flex justify-between text-xs mt-1">
-                      <span>12 AM</span>
-                      <span>12 PM</span>
-                      <span>12 AM</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-               {/* Backup Reserve Level Setting */}
-               <div>
-                <p className="text-sm text-muted-foreground mb-2">Backup Reserve Level</p>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="range"
-                    min={10}
-                    max={100}
-                    step={5}
-                    value={reserveLevel}
-                    onChange={(e) => setReserveLevel(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700"
-                  />
-                  <span className="text-sm font-medium">{reserveLevel}%</span>
-                </div>
-              </div>
-
-              {/* Grid Feed-in Control */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Grid Feed-In Control</p>
-                <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-                  <span className="font-medium">Allow Excess Solar to Grid</span>
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowFeedIn}
-                      onChange={() => setAllowFeedIn(!allowFeedIn)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 relative transition-colors">
-                      <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-5"></div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
         </div>
         </div>
       )}

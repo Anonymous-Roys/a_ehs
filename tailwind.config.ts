@@ -116,6 +116,22 @@ export default {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
+        dash: {
+          to: { strokeDashoffset: '-20' },
+        },
+        'dash-reverse': {
+          to: { strokeDashoffset: '20' },
+        },
+        'dot-flow': {
+          '0%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        'dot-flow-reverse': {
+          '0%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(4px)' },
+          '100%': { transform: 'translateY(0)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -128,6 +144,10 @@ export default {
         "scale-in": "scale-in 0.3s ease-out",
         "scale-out": "scale-out 0.3s ease-out",
         "rotate-glow": "rotate-glow 10s linear infinite",
+        'dash-flow': 'dash 2s linear infinite',
+        'dash-flow-reverse': 'dash-reverse 2s linear infinite',
+        'flow-dot': 'dot-flow 2s linear infinite',
+        'flow-dot-reverse': 'dot-flow-reverse 2s linear infinite',
       },
       backdropBlur: {
         xs: "2px",
@@ -135,4 +155,5 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  
 } satisfies Config;
