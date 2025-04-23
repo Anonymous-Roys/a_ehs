@@ -82,6 +82,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <PowerFlowCard activeMode={activeMode} />
           <ControlPanel
+           deviceId="device001"
             activeMode={activeMode}
             setActiveMode={setActiveMode}
             autoMode={autoMode}
