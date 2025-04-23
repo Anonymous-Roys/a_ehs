@@ -29,7 +29,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
     setActiveMode(mode);
   
     try {
-      const response = await fetch("http://localhost:3000/api/command/send", {
+      const response = await fetch("https://powerhive-backend.onrender.com/api/command/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
