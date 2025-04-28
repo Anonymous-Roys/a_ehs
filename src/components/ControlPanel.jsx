@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { Sun, Battery, Power, Home, ArrowDownToLine, ArrowUpFromLine, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import ControlToggle from "./ControlToggle";
 import { toast } from "sonner";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {  AnimatePresence, motion } from "framer-motion";
 import { modeGroups } from "../lib/data";
 
 
@@ -94,7 +94,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
   const activeGroup = modeGroups.find(g => g.id === activeGroupId);
 
   return (
-    <Card className="col-span-full md:col-span-1 energy-card">
+    <Card className="col-span-full md:col-span-1 energy-card text-black">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-medium">Energy Control</CardTitle>
       </CardHeader>

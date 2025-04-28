@@ -1,126 +1,64 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { Battery, Clock, ArrowUp, ArrowDown, Zap } from "lucide-react";
-import { collection, query, where, orderBy, limit, getDocs, documentId } from "firebase/firestore";
-import { db } from "../../firebase";
-
+import { Battery, Clock, ArrowUp, ArrowDown, ChevronUp, Zap, ArrowRight } from "lucide-react";
 
 const BatteryStatus = () => {
-  // State variables for battery data
-  const [batteryLevel, setBatteryLevel] = useState(50);
-  const [charging, setCharging] = useState(false);
-  const [powerFlow, setPowerFlow] = useState(0);
-  const [chargeHistory, setChargeHistory] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState("--h --m");
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState("");
-  const [batteryCapacity, setBatteryCapacity] = useState(10.2); // kWh
-  const [availableCapacity, setAvailableCapacity] = useState(0);
-  const [batteryHealth, setBatteryHealth] = useState(100); // Percentage
-
-  // Fetch latest battery data from Firebase
-  const fetchLatestBatteryData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Reference to the readings collection for device001
-      const readingsRef = collection(db, "powerhive_data", "device001", "readings");
-      
-      // Create query to get the most recent document with sensor type BATTERY
-      const q = query(
-        readingsRef,
-        where("sensor", "==", "BATTERY"),
-        orderBy(documentId(), "desc"),
-        limit(1)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const latestDoc = querySnapshot.docs[0];
-        const data = latestDoc.data();
-        
-        // Update battery states with fetched data
-        const newBatteryLevel = Math.round(data.percentage || 0);
-        setBatteryLevel(newBatteryLevel);
-        
-        // Determine charging state based on current_mA
-        // Positive current means charging, negative means discharging
-        const isCharging = data.current_mA > 0;
-        setCharging(isCharging);
-        
-        // Calculate power flow in kW from power_mW
-        const powerFlowKW = Math.abs(data.power_mW) / 1000000;
-        setPowerFlow(Math.round(powerFlowKW * 10) / 10); // Round to 1 decimal place
-        
-        // Calculate available capacity
-        const availableKWh = (batteryCapacity * newBatteryLevel / 100).toFixed(1);
-        setAvailableCapacity(parseFloat(availableKWh));
-        
-        // Update charge history
-        setChargeHistory(prev => {
-          if (prev.length >= 12) {
-            return [...prev.slice(1), newBatteryLevel];
+  const [batteryLevel, setBatteryLevel] = useState(27);
+  const [charging, setCharging] = useState(true);
+  const [powerFlow, setPowerFlow] = useState(2.1);
+  const [chargeHistory, setChargeHistory] = useState([22, 24, 25, 26, 27, 27]);
+  const [timeRemaining, setTimeRemaining] = useState("5h 20m");
+  
+  useEffect(() => {
+    // Simulate battery level changes
+    const interval = setInterval(() => {
+      if (charging) {
+        setBatteryLevel(prev => {
+          const newLevel = Math.min(95, prev + 1);
+          if (newLevel >= 95) {
+            setCharging(false);
           }
-          return [...prev, newBatteryLevel];
+          return newLevel;
         });
         
-        // Calculate time remaining
-        calculateTimeRemaining(data.percentage, data.current_mA, data.remaining_capacity_mAh);
-        
-        // Update last updated timestamp
-        setLastUpdated(new Date(latestDoc.id).toLocaleTimeString());
+        // Simulate variable charging rate
+        setPowerFlow(Math.round((2 + Math.random() * 0.5) * 10) / 10);
       } else {
-        console.log("No battery data available");
+        setBatteryLevel(prev => {
+          const newLevel = Math.max(20, prev - 1);
+          if (newLevel <= 20) {
+            setCharging(true);
+          }
+          return newLevel;
+        });
+        
+        // Simulate variable discharge rate
+        setPowerFlow(Math.round((1.2 + Math.random() * 0.6) * 10) / 10);
       }
-    } catch (error) {
-      console.error("Error fetching battery data: ", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Helper function to calculate time remaining
-  const calculateTimeRemaining = (percentage, currentMa, remainingCapacityMah) => {
-    if (!percentage || !currentMa || !remainingCapacityMah) {
-      setTimeRemaining("--h --m");
-      return;
-    }
-
-    if (currentMa > 0) {
-      // Charging: calculate time to full (95%)
-      const capacityToFull = remainingCapacityMah * ((95 - percentage) / percentage);
-      const hoursToFull = capacityToFull / currentMa;
       
-      const hours = Math.floor(hoursToFull);
-      const minutes = Math.round((hoursToFull - hours) * 60);
+      // Update charge history
+      setChargeHistory(prev => {
+        if (prev.length >= 12) {
+          return [...prev.slice(1), batteryLevel];
+        }
+        return [...prev, batteryLevel];
+      });
       
-      setTimeRemaining(`${hours}h ${minutes}m`);
-    } else {
-      // Discharging: calculate time to empty (20%)
-      const usableCapacity = remainingCapacityMah * ((percentage - 20) / percentage);
-      const hoursToEmpty = usableCapacity / Math.abs(currentMa);
-      
-      const hours = Math.floor(hoursToEmpty);
-      const minutes = Math.round((hoursToEmpty - hours) * 60);
-      
-      setTimeRemaining(`${hours}h ${minutes}m`);
-    }
-  };
-
-  // Fetch data on component mount and set interval for periodic updates
-  useEffect(() => {
-    // Initial fetch
-    fetchLatestBatteryData();
-    
-    // Set interval for regular updates
-    const interval = setInterval(() => {
-      fetchLatestBatteryData();
-    }, 30000); // Fetch every 30 seconds
+      // Update time remaining
+      if (charging) {
+        const hoursToFull = Math.round((95 - batteryLevel) / 10);
+        const minutesToFull = Math.round(((95 - batteryLevel) % 10) * 6);
+        setTimeRemaining(`${hoursToFull}h ${minutesToFull}m`);
+      } else {
+        const hoursToEmpty = Math.round((batteryLevel - 20) / 7);
+        const minutesToEmpty = Math.round(((batteryLevel - 20) % 7) * 8);
+        setTimeRemaining(`${hoursToEmpty}h ${minutesToEmpty}m`);
+      }
+    }, 2000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [charging, batteryLevel]);
 
   // Get status color based on battery level
   const getBatteryColor = () => {
@@ -150,10 +88,7 @@ const BatteryStatus = () => {
   };
 
   return (
-    <Card 
-      onClick={() => window.location.href="/battery-details"} 
-      className="battery-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:from-sky-100 hover:to-sky-200 cursor-pointer dark:hover:from-sky-900 dark:hover:to-sky-800"
-    >
+    <Card onClick={() => window.location.href="/battery-details"} className="battery-card w-full shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:from-sky-100 hover:to-sky-200 cursor-pointer dark:hover:from-sky-900 dark:hover:to-sky-800">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
         
@@ -227,11 +162,6 @@ const BatteryStatus = () => {
                 ? `${timeRemaining} until full` 
                 : `${timeRemaining} remaining`}
             </p>
-            {lastUpdated && (
-              <p className="text-xs text-muted-foreground">
-                Last updated: {lastUpdated}
-              </p>
-            )}
           </div>
           
           {/* Progress Bar */}
@@ -264,11 +194,11 @@ const BatteryStatus = () => {
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Capacity</p>
-              <p className="font-medium text-sm">{batteryCapacity.toFixed(1)} kWh</p>
+              <p className="font-medium text-sm">10.2 kWh</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Available</p>
-              <p className="font-medium text-sm">{availableCapacity} kWh</p>
+              <p className="font-medium text-sm">{Math.round(10.2 * batteryLevel / 100 * 10) / 10} kWh</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
@@ -276,17 +206,13 @@ const BatteryStatus = () => {
                 {charging ? "+" : "-"}{powerFlow} kW
               </p>
             </div>
-          </div>
-          
-          {isLoading && (
-            <div className="absolute inset-0 bg-slate-100/50 dark:bg-slate-800/50 flex items-center justify-center">
-              <div className="h-8 w-8 border-4 border-t-blue-500 border-slate-200 rounded-full animate-spin"></div>
-            </div>
-          )}                  
+          </div>                  
         </div>
       </CardContent>
     </Card>
   );
 };
+
+
 
 export default BatteryStatus;

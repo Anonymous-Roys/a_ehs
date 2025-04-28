@@ -194,3 +194,13 @@
   animation: grid-pulse 2s infinite;
 }
 
+body {
+  background-color: #fff;
+  color: #000;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark {
+  background-color: #2b2a2a;
+  color: #fff;
+}

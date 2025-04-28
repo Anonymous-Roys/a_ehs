@@ -5,6 +5,14 @@
   text-align: center;
 }
 
+body {
+  @apply bg-white text-black;
+}
+.dark body {
+  @apply bg-gray-700 text-white;
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;
