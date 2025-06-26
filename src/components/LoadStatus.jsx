@@ -201,11 +201,11 @@ const LoadStatus = () => {
           <div className="w-full grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div>
               <p className="text-xs text-muted-foreground">Current Draw</p>
-              <p className="font-medium text-sm">{loadPower} kW</p>
+              <p className="font-medium text-sm">{24.7} W</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Today's Usage</p>
-              <p className="font-medium text-sm">42.7 kWh</p>
+              <p className="font-medium text-sm">42.7 Wh</p>
             </div>
           </div>
           

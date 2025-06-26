@@ -166,16 +166,16 @@ const GridStatus = () => {
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Voltage</p>
-              <p className="font-medium text-sm">{0.0} V</p>
+              <p className="font-medium text-sm">{240.0} V</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Frequency</p>
-              <p className="font-medium text-sm">{0.0} Hz</p>
+              <p className="font-medium text-sm">{49.8} Hz</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
               <p className={`font-medium text-sm ${importing ? 'text-indigo-500' : 'text-gray-500'}`}>
-                {importing ? "0.0" : "0.0"} kW
+                {importing ? "20.0" : "0.0"} W
               </p>
             </div>
           </div>

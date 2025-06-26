@@ -147,7 +147,7 @@ const SolarStatus = () => {
             </div> */}
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Today's</p>
-              <p className="font-medium text-sm">18.4 kWh</p>
+              <p className="font-medium text-sm">18.4 Wh</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">To Battery</p>
