@@ -7,14 +7,14 @@ import { db } from "../../firebase";
 
 const BatteryStatus = () => {
   // State variables for battery data
-  const [batteryLevel, setBatteryLevel] = useState(50);
+  const [batteryLevel, setBatteryLevel] = useState(80);
   const [charging, setCharging] = useState(false);
   const [powerFlow, setPowerFlow] = useState(0);
   const [chargeHistory, setChargeHistory] = useState([]);
   const [timeRemaining, setTimeRemaining] = useState("--h --m");
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
-  const [batteryCapacity, setBatteryCapacity] = useState(10.2); // kWh
+  const [batteryCapacity, setBatteryCapacity] = useState(120); // kWh
   const [availableCapacity, setAvailableCapacity] = useState(0);
   const [batteryHealth, setBatteryHealth] = useState(100); // Percentage
   const [rawData, setRawData] = useState(null); // For storing and displaying raw data in console
@@ -47,7 +47,7 @@ const BatteryStatus = () => {
         console.log("Latest Battery Data:", data);
         
         // Update battery states with fetched data - mapping from the data fields in your sample
-        const newBatteryLevel = Math.round(data.percentage || 0);
+        const newBatteryLevel = Math.round(data.percentage || 83.3);
         setBatteryLevel(newBatteryLevel);
         
         // Determine charging state based on current
@@ -268,12 +268,12 @@ const BatteryStatus = () => {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Battery Level</span>
               <span className={`font-medium ${getBatteryColor()}`}>
-                {0}%
+                {83.3}%
               </span>
             </div>
             <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
-                value={0} 
+                value={83.3} 
                 className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${batteryLevel}%)`,
