@@ -146,7 +146,7 @@ const BatteryStatus = () => {
     // Set interval for regular updates
     const interval = setInterval(() => {
       fetchLatestBatteryData();
-    }, 30000); // Fetch every 30 seconds
+    }, 3000); // Fetch every 30 seconds
     
     return () => clearInterval(interval);
   }, []);

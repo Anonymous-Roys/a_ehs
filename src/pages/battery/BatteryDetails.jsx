@@ -17,7 +17,7 @@ import { db } from "../../firebase";
 const BatteryDetails = () => {
   // Battery status state
   const [batteryData, setBatteryData] = useState({
-    level: 50,
+    level: 83.3,
     charging: false,
     powerFlow: 0,
     voltage: 0,
@@ -37,7 +37,7 @@ const BatteryDetails = () => {
   const [systemStats, setSystemStats] = useState({
     todayGeneration: 0,
     todayConsumption: 0,
-    capacity: 10.2,
+    capacity: 120,
     health: 90,
     cycles: 0,
     savings: 0
