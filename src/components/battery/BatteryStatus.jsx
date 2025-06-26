@@ -293,16 +293,16 @@ const BatteryStatus = () => {
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Capacity</p>
-              <p className="font-medium text-sm">{0.0} Wh</p>
+              <p className="font-medium text-sm">{120} Wh</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Available</p>
-              <p className="font-medium text-sm">{0} Wh</p>
+              <p className="font-medium text-sm">{100} Wh</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
               <p className={`font-medium text-sm ${charging ? 'text-blue-500' : 'text-rose-500'}`}>
-                {charging ? "+" : "-"}{0} W
+                {charging ? "+" : "-"}{20} W
               </p>
             </div>
           </div>
