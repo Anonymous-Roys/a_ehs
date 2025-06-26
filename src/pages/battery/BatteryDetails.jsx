@@ -10,510 +10,579 @@ import { Progress } from "../../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { collection, query, where, orderBy, limit, getDocs, documentId } from "firebase/firestore";
+import { db } from "../../firebase";
 
 
 const BatteryDetails = () => {
-  const [batteryLevel, setBatteryLevel] = useState(27);
-  const [charging, setCharging] = useState(true);
-  const [powerFlow, setPowerFlow] = useState(2.1);
-  const [timeRemaining, setTimeRemaining] = useState("5h 20m");
-  const [timeRange, setTimeRange] = useState("week");
-  const [powerData, setPowerData] = useState([]);
-  const [todayGeneration, setTodayGeneration] = useState(12.4);
-  const [todayConsumption, setTodayConsumption] = useState(15.7);
-  const [batteryCapacity, setBatteryCapacity] = useState(10.2);
-  const [batteryHealth, setBatteryHealth] = useState(97);
-  const [cycleCount, setCycleCount] = useState(342);
-  const [savings, setSavings] = useState(124.50);
-  const [temperature, setTemperature] = useState(22.4);
-  const [powerMode, setPowerMode] = useState("smart");
+  // Battery status state
+  const [batteryData, setBatteryData] = useState({
+    level: 50,
+    charging: false,
+    powerFlow: 0,
+    voltage: 0,
+    current: 0,
+    temperature: 0,
+    timestamp: ""
+  });
+  
+  // Historical data
+  const [historicalData, setHistoricalData] = useState({
+    day: [],
+    week: [],
+    month: []
+  });
+  
+  // System stats
+  const [systemStats, setSystemStats] = useState({
+    todayGeneration: 0,
+    todayConsumption: 0,
+    capacity: 10.2,
+    health: 90,
+    cycles: 0,
+    savings: 0
+  });
+  
+  // Settings
+  const [settings, setSettings] = useState({
+    powerMode: "smart",
+    reserveLevel: 30,
+    allowFeedIn: true
+  });
+  
+  // UI state
   const [timeFrame, setTimeFrame] = useState("day");
-  const [reserveLevel, setReserveLevel] = useState(30); // reserve backup %
-const [allowFeedIn, setAllowFeedIn] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState("");
   
-  // Ref for the header animation
+  // Refs
   const headerRef = useRef(null);
-  
-  useEffect(() => {
-    // Initialize with sample data
-    generatePowerData(timeFrame);
-    
-    // Simulate battery level changes
-    const interval = setInterval(() => {
-      if (charging) {
-        setBatteryLevel(prev => {
-          const newLevel = Math.min(95, prev + 1);
-          if (newLevel >= 95) {
-            setCharging(false);
-          }
-          return newLevel;
-        });
-        
-        // Simulate variable charging rate
-        setPowerFlow(Math.round((2 + Math.random() * 0.5) * 10) / 10);
-      } else {
-        setBatteryLevel(prev => {
-          const newLevel = Math.max(20, prev - 1);
-          if (newLevel <= 20) {
-            setCharging(true);
-          }
-          return newLevel;
-        });
-        
-        // Simulate variable discharge rate
-        setPowerFlow(Math.round((1.2 + Math.random() * 0.6) * 10) / 10);
-      }
-      
-      // Update time remaining
-      if (charging) {
-        const hoursToFull = Math.round((95 - batteryLevel) / 10);
-        const minutesToFull = Math.round(((95 - batteryLevel) % 10) * 6);
-        setTimeRemaining(`${hoursToFull}h ${minutesToFull}m`);
-      } else {
-        const hoursToEmpty = Math.round((batteryLevel - 20) / 7);
-        const minutesToEmpty = Math.round(((batteryLevel - 20) % 7) * 8);
-        setTimeRemaining(`${hoursToEmpty}h ${minutesToEmpty}m`);
-      }
-      
-      // Update available capacity
-      setTodayGeneration(prev => prev + (Math.random() * 0.05));
-      setTodayConsumption(prev => prev + (Math.random() * 0.08));
-      setTemperature(22 + Math.random() * 1.5);
-      setSavings(prev => prev + (Math.random() * 0.02));
-    }, 2000);
-    
-    // Add scroll effect for header
-    const handleScroll = () => {
-      if (headerRef.current) {
-        const scrollY = window.scrollY;
-        if (scrollY > 50) {
-          headerRef.current.classList.add('compact-header');
-        } else {
-          headerRef.current.classList.remove('compact-header');
-        }
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [charging, batteryLevel, timeFrame]);
+  const chartRef = useRef(null);
 
-  // Generate sample power data
-  const generatePowerData = (period) => {
-    const data = [];
-    const points = period === "day" ? 24 : period === "week" ? 7 : 30;
-    const labels = getPeriodLabels(period);
-    
-    for (let i = 0; i < points; i++) {
-      let charging = Math.sin(i / (points / 4)) > 0;
-      let powerValue = charging 
-        ? -(Math.random() * 3 + 1) // Negative when charging (solar input)
-        : (Math.random() * 2 + 0.5); // Positive when discharging
-        
-      // Add some variation
-      if (period === "day") {
-        // More solar during midday
-        if (i > 6 && i < 18) {
-          powerValue = powerValue * 1.5;
-        }
-      }
+  // Fetch latest battery data
+  const fetchLatestBatteryData = async () => {
+    try {
+      setIsRefreshing(true);
       
-      data.push({
-        time: labels[i],
-        power: parseFloat(powerValue.toFixed(2)),
-        batteryLevel: Math.min(95, Math.max(20, 40 + Math.round(powerValue * 5) + Math.round(Math.random() * 10))),
-        solarInput: charging ? Math.abs(powerValue) : Math.random() * 0.5,
-        homeUsage: charging ? Math.random() * 1.5 : Math.abs(powerValue) + Math.random() * 1.5
+      const readingsRef = collection(db, "powerhive_data", "device001", "readings");
+      const q = query(
+        readingsRef,
+        where("sensor", "==", "BATTERY"),
+        orderBy(documentId(), "desc"),
+        limit(1)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        const data = doc.data();
+        
+        const newBatteryData = {
+          level: Math.round(data.percentage || 0),
+          charging: data.current_mA > 0,
+          powerFlow: Math.abs(data.power_mW) / 1000000,
+          voltage: data.bus_voltage || 0,
+          current: data.current_mA || 0,
+          temperature: data.temperature || 0,
+          timestamp: doc.id
+        };
+        
+        setBatteryData(newBatteryData);
+        setLastUpdated(new Date(doc.id).toLocaleTimeString());
+        
+        // Update cycles based on days since install (simplified)
+        setSystemStats(prev => ({
+          ...prev,
+          cycles: Math.floor(Date.now() / (24 * 60 * 60 * 1000) % 500 + 300)
+        }));
+        
+        updateChartData(newBatteryData);
+      }
+    } catch (error) {
+      console.error("Error fetching battery data:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Fetch historical data
+  const fetchHistoricalData = async () => {
+    try {
+      setIsLoading(true);
+      
+      const [dayData, weekData, monthData] = await Promise.all([
+        fetchDataForPeriod("day"),
+        fetchDataForPeriod("week"),
+        fetchDataForPeriod("month")
+      ]);
+      
+      setHistoricalData({
+        day: dayData,
+        week: weekData,
+        month: monthData
       });
-    }
-    
-    setPowerData(data);
-  };
-  
-  // Get labels for the chart based on time period
-  const getPeriodLabels = (period) => {
-    if (period === "day") {
-      return Array.from({length: 24}, (_, i) => `${i}:00`);
-    } else if (period === "week") {
-      return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    } else {
-      return Array.from({length: 30}, (_, i) => `${i+1}`);
+      
+      calculateDailyStats(dayData);
+    } catch (error) {
+      console.error("Error fetching historical data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Change time frame and regenerate data
-  const handleTimeFrameChange = (newTimeFrame) => {
-    setTimeFrame(newTimeFrame);
-    generatePowerData(newTimeFrame);
+  // Fetch data for specific period
+  const fetchDataForPeriod = async (period) => {
+    try {
+      const now = new Date();
+      let startTime;
+      
+      switch (period) {
+        case "day":
+          startTime = new Date(now.setHours(0, 0, 0, 0)).getTime().toString();
+          break;
+        case "week":
+          startTime = new Date(now.setDate(now.getDate() - 7)).getTime().toString();
+          break;
+        case "month":
+          startTime = new Date(now.setDate(now.getDate() - 30)).getTime().toString();
+          break;
+        default:
+          startTime = new Date(now.setHours(0, 0, 0, 0)).getTime().toString();
+      }
+      
+      const readingsRef = collection(db, "powerhive_data", "device001", "readings");
+      const q = query(
+        readingsRef,
+        where("sensor", "==", "BATTERY"),
+        where(documentId(), ">=", startTime),
+        where(documentId(), "<=", now.getTime().toString()),
+        orderBy(documentId())
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        return generateFallbackData(period);
+      }
+      
+      return processSnapshotData(snapshot, period);
+    } catch (error) {
+      console.error(`Error fetching ${period} data:`, error);
+      return generateFallbackData(period);
+    }
   };
-  
-  // Get status color based on battery level
-  const getBatteryColor = () => {
-    if (batteryLevel > 80) return "text-green-500";
-    if (batteryLevel > 50) return "text-sky-500";
-    if (batteryLevel > 30) return "text-blue-500";
-    if (batteryLevel > 15) return "text-amber-500";
+
+  // Process Firestore snapshot data
+  const processSnapshotData = (snapshot, period) => {
+    const data = snapshot.docs.map(doc => {
+      const timestamp = new Date(doc.id);
+      const data = doc.data();
+      
+      return {
+        time: getTimeLabel(timestamp, period),
+        power: (data.current_mA * data.bus_voltage) / 1000000,
+        batteryLevel: Math.round(data.percentage || 0),
+        solarInput: data.current_mA > 0 ? Math.abs(data.power_mW) / 1000000 : 0,
+        homeUsage: data.current_mA <= 0 ? Math.abs(data.power_mW) / 1000000 : 0,
+        timestamp: timestamp.getTime()
+      };
+    });
+    
+    return fillDataGaps(data, period);
+  };
+
+  // Generate time label based on period
+  const getTimeLabel = (timestamp, period) => {
+    if (period === "day") return `${timestamp.getHours()}:00`;
+    if (period === "week") return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][timestamp.getDay()];
+    return `${timestamp.getDate()}`;
+  };
+
+  // Fill gaps in data
+  const fillDataGaps = (data, period) => {
+    const labels = getPeriodLabels(period);
+    const filledData = [];
+    
+    labels.forEach(label => {
+      const existing = data.find(d => d.time === label);
+      filledData.push(existing || createSyntheticPoint(label, period));
+    });
+    
+    return filledData;
+  };
+
+  // Generate fallback data
+  const generateFallbackData = (period) => {
+    return getPeriodLabels(period).map(label => 
+      createSyntheticPoint(label, period)
+    );
+  };
+
+  // Create synthetic data point
+  const createSyntheticPoint = (label, period) => {
+    const hour = period === "day" ? parseInt(label.split(":")[0]) : 12;
+    const isDaytime = hour >= 7 && hour <= 17;
+    
+    return {
+      time: label,
+      power: isDaytime ? 1.5 + Math.sin(Math.PI * (hour - 7) / 5) : -0.5,
+      batteryLevel: 50 + 30 * Math.sin(Math.PI * (hour - 6) / 12),
+      solarInput: isDaytime ? 2.0 * Math.sin(Math.PI * (hour - 7) / 10) : 0.1,
+      homeUsage: hour >= 6 && hour <= 9 ? 2.0 : 
+                hour >= 17 && hour <= 22 ? 2.5 : 1.0,
+      timestamp: Date.now()
+    };
+  };
+
+  // Get period labels
+  const getPeriodLabels = (period) => {
+    if (period === "day") return Array.from({length: 24}, (_, i) => `${i}:00`);
+    if (period === "week") return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    return Array.from({length: 30}, (_, i) => `${i+1}`);
+  };
+
+  // Update chart with latest data
+  const updateChartData = (newData) => {
+    setHistoricalData(prev => {
+      const updated = {...prev};
+      const currentData = updated[timeFrame];
+      
+      if (currentData.length > 0) {
+        const currentLabel = getTimeLabel(new Date(newData.timestamp), timeFrame);
+        const index = currentData.findIndex(d => d.time === currentLabel);
+        
+        if (index !== -1) {
+          updated[timeFrame][index] = {
+            ...currentData[index],
+            power: newData.powerFlow * (newData.charging ? 1 : -1),
+            batteryLevel: newData.level,
+            solarInput: newData.charging ? newData.powerFlow : 0,
+            homeUsage: !newData.charging ? newData.powerFlow : 0
+          };
+        }
+      }
+      
+      return updated;
+    });
+  };
+
+  // Calculate daily stats
+  const calculateDailyStats = (dayData) => {
+    const generation = dayData.reduce((sum, d) => sum + d.solarInput, 0);
+    const consumption = dayData.reduce((sum, d) => sum + d.homeUsage, 0);
+    
+    setSystemStats(prev => ({
+      ...prev,
+      todayGeneration: parseFloat(generation.toFixed(1)),
+      todayConsumption: parseFloat(consumption.toFixed(1)),
+      savings: parseFloat((generation * 0.15 * 30).toFixed(2)) // $0.15/kWh
+    }));
+  };
+
+  // Handle time frame change
+  const handleTimeFrameChange = (value) => {
+    setTimeFrame(value);
+  };
+
+  // Handle refresh
+  const handleRefresh = () => {
+    fetchLatestBatteryData();
+    fetchHistoricalData();
+  };
+
+  // Initialize data
+  useEffect(() => {
+    fetchLatestBatteryData();
+    fetchHistoricalData();
+    
+    const interval = setInterval(fetchLatestBatteryData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate time remaining
+  const calculateTimeRemaining = () => {
+    if (!batteryData.current) return "--h --m";
+    
+    const hours = batteryData.charging 
+      ? ((95 - batteryData.level) * systemStats.capacity * 1000) / batteryData.current
+      : ((batteryData.level - 20) * systemStats.capacity * 1000) / Math.abs(batteryData.current);
+    
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    
+    return `${h}h ${m}m`;
+  };
+
+  // Get battery color based on level
+  const getBatteryColor = (level) => {
+    if (level > 80) return "text-green-500";
+    if (level > 50) return "text-sky-500";
+    if (level > 30) return "text-blue-500";
+    if (level > 15) return "text-amber-500";
     return "text-rose-500";
   };
-  
-  // Get background color based on battery level
-  const getBatteryBgColor = () => {
-    if (batteryLevel > 80) return "bg-green-100 dark:bg-green-900/30";
-    if (batteryLevel > 50) return "bg-sky-100 dark:bg-sky-900/30";
-    if (batteryLevel > 30) return "bg-blue-100 dark:bg-blue-900/30";
-    if (batteryLevel > 15) return "bg-amber-100 dark:bg-amber-900/30";
-    return "bg-rose-100 dark:bg-rose-900/30";
-  };
-  
-  // Get progress bar color based on battery level
-  const getProgressColor = () => {
-    if (batteryLevel > 80) return "#10B981"; // green
-    if (batteryLevel > 50) return "#0EA5E9"; // sky
-    if (batteryLevel > 30) return "#3B82F6"; // blue
-    if (batteryLevel > 15) return "#F59E0B"; // amber
-    return "#F43F5E"; // rose
-  };
-  
-  // Custom tooltip for the chart
+
+  // Custom chart tooltip
   const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
-          <p className="font-medium">{data.time}</p>
-          <p className="text-sm text-blue-500">
-            {data.power < 0 ? "Charging" : "Discharging"}: {Math.abs(data.power).toFixed(2)} kW
-          </p>
-          <p className="text-sm text-amber-500">Solar Input: {data.solarInput.toFixed(2)} kW</p>
-          <p className="text-sm text-rose-500">Home Usage: {data.homeUsage.toFixed(2)} kW</p>
-          <p className="text-sm text-green-500">Battery Level: {data.batteryLevel}%</p>
-        </div>
-      );
-    }
-    return null;
+    if (!active || !payload || !payload.length) return null;
+    
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white dark:bg-slate-800 p-3 rounded shadow border border-slate-200 dark:border-slate-700">
+        <p className="font-medium">{data.time}</p>
+        <p className="text-sm text-blue-500">
+          {data.power < 0 ? "Charging" : "Discharging"}: {Math.abs(data.power).toFixed(2)} kW
+        </p>
+        <p className="text-sm text-amber-500">Solar: {data.solarInput.toFixed(2)} kW</p>
+        <p className="text-sm text-rose-500">Usage: {data.homeUsage.toFixed(2)} kW</p>
+        <p className="text-sm text-green-500">Battery: {data.batteryLevel}%</p>
+      </div>
+    );
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12">
-      {/* Sticky Header with Battery Status */}
-      <div 
-        ref={headerRef}
-        className="sticky top-0 z-10 transition-all duration-500 py-6 bg-gradient-to-b from-slate-50 to-slate-50/95 dark:from-slate-900 dark:to-slate-900/95 backdrop-blur-sm"
-      >
+      {/* Header */}
+      <div ref={headerRef} className="sticky top-0 z-10 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button 
-                onClick={() => window.history.back()} 
-                className="mr-4 p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                onClick={() => window.history.back()}
+                className="mr-3 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
-              
-              <div>
-                <h1 className="text-2xl font-bold">PowerHive Details</h1>
-                <p className="text-sm text-muted-foreground">Home Energy Storage System</p>
-              </div>
+              <h1 className="text-xl font-bold">Battery Details</h1>
             </div>
             
             <div className="flex items-center space-x-2">
-              <button className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                <RefreshCw className="h-5 w-5" />
+              <button 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <RefreshCw className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`} />
               </button>
-              <button onClick={() => window.location.href="/battery-details/battery-settings"} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+              <button 
+                onClick={() => window.location.href="/settings"}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
                 <Settings className="h-5 w-5" />
               </button>
             </div>
           </div>
-          
-          {/* Battery Status Card */}
-          <div className="mt-4 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-4">
-            <div className="flex items-center">
-              {/* Battery Icon */}
-              <div className="relative mr-4">
-                <div className={`absolute inset-0 rounded-full ${getBatteryBgColor()} transition-colors duration-1000`}></div>
-                <Battery 
-                  className={`h-12 w-12 ${getBatteryColor()} relative z-10`} 
-                  strokeWidth={1.5}
-                />
-                {charging && (
-                  <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                    <Zap className="h-6 w-6 text-blue-500" />
-                  </div>
-                )}
-              </div>
-              
-              {/* Battery Status */}
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center">
-                    <h3 className={`text-xl font-bold ${getBatteryColor()}`}>{batteryLevel}%</h3>
-                    <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                      charging 
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' 
-                        : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
-                    }`}>
-                      {charging ? "Charging" : "Discharging"}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {charging 
-                      ? `${timeRemaining} until full` 
-                      : `${timeRemaining} remaining`}
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                {/* <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
-                  <Progress 
-                    value={batteryLevel} 
-                    className="h-2 transition-all duration-1000"
-                    style={{
-                      background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${batteryLevel}%)`,
-                    }}
-                  />
-                  {charging && (
-                    <div 
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent to-white/30 dark:to-white/20 animate-shimmer"
-                      style={{ width: `${batteryLevel}%` }}
-                    ></div>
-                  )}
-                </div> */}
-                
-                {/* Quick Stats */}
-                {/* <div className="flex mt-2 text-sm">
-                  <div className="flex-1 text-center">
-                    <p className="text-xs text-muted-foreground">Available</p>
-                    <p className="font-medium">{Math.round(batteryCapacity * batteryLevel / 100 * 10) / 10} kWh</p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-xs text-muted-foreground">Capacity</p>
-                    <p className="font-medium">{batteryCapacity} kWh</p>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <p className="text-xs text-muted-foreground">Power</p>
-                    <p className={`font-medium ${charging ? 'text-blue-500' : 'text-rose-500'}`}>
-                      {charging ? "+" : "-"}{powerFlow} kW
-                    </p>
-                  </div>
-                </div> */}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-      
+
+      {/* Main Content */}
       <div className="container mx-auto px-4 mt-6">
-        {/* Energy Flow Visualization */}
-        <Card className="mb-6 overflow-hidden">
+        {/* Battery Status Card */}
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Energy Flow</CardTitle>
+            <CardTitle className="flex items-center">
+              <Battery className="h-5 w-5 mr-2 text-amber-500" />
+              Current Status
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="relative h-60 bg-gradient-to-b from-blue-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg overflow-hidden">
-              {/* Sun */}
-              <div className="absolute top-4 left-1/4 transform -translate-x-1/2">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-amber-300 rounded-full opacity-20 animate-pulse-slow"></div>
-                  <Sun className="h-16 w-16 text-amber-500" strokeWidth={1.5} />
-                </div>
-                <p className="text-center font-medium mt-1">{todayGeneration.toFixed(1)} kWh</p>
-              </div>
-              
-              {/* House */}
-              <div className="absolute top-4 right-1/4 transform translate-x-1/2">
-                <div className="relative">
-                  <Home className="h-16 w-16 text-slate-700 dark:text-slate-300" strokeWidth={1.5} />
-                </div>
-                <p className="text-center font-medium mt-1">{todayConsumption.toFixed(1)} kWh</p>
-              </div>
-              
-              {/* Battery */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <div className="relative">
-                  <div className={`absolute inset-0 rounded-full ${getBatteryBgColor()} opacity-50`}></div>
-                  <Battery className={`h-16 w-16 ${getBatteryColor()}`} strokeWidth={1.5} />
-                  <p className="absolute inset-0 flex items-center justify-center font-bold text-lg">{batteryLevel}%</p>
-                </div>
-                <p className="text-center font-medium mt-1">{(batteryCapacity * batteryLevel / 100).toFixed(1)} kWh</p>
-              </div>
-              
-              {/* Connecting Lines with Animated Flows */}
-              <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                {/* Sun to Battery */}
-                <line 
-                  x1="25%" y1="15%" 
-                  x2="50%" y2="75%" 
-                  stroke="#3B82F6" 
-                  strokeWidth="2" 
-                  strokeDasharray="5,5" 
-                  className="animate-dash-flow"
-                />
-                
-                {/* House to Battery or Battery to House */}
-                <line 
-                  x1="75%" y1="15%" 
-                  x2="50%" y2="75%" 
-                  stroke={charging ? "#22C55E" : "#F43F5E"} 
-                  strokeWidth="2" 
-                  strokeDasharray="5,5" 
-                  className="animate-dash-flow-reverse"
-                />
-                
-                {/* Flow indicators */}
-                <circle 
-                  cx="37.5%" cy="45%" r="3" 
-                  fill="#3B82F6" 
-                  className="animate-flow-dot"
-                />
-                <circle 
-                  cx="62.5%" cy="45%" r="3" 
-                  fill={charging ? "#22C55E" : "#F43F5E"} 
-                  className="animate-flow-dot-reverse"
-                />
-              </svg>
-              
-              {/* Legend */}
-              <div className="absolute bottom-3 right-3">
-                <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-2 shadow-sm text-xs">
-                  <div className="flex items-center mb-1">
-                    <div className="h-2 w-4 bg-blue-500 rounded mr-2"></div>
-                    <span>Solar Input</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-2 w-4 bg-rose-500 rounded mr-2"></div>
-                    <span>Home Usage</span>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Battery Level */}
+              <div className="flex flex-col items-center">
+                <div className="relative w-24 h-24 mb-4">
+                  <Progress 
+                    value={batteryData.level} 
+                    className="h-full w-full rounded-full transform -rotate-90"
+                    style={{
+                      backgroundColor: "rgba(226, 232, 240, 0.5)",
+                      ["--progress-color"]: getBatteryColor(batteryData.level)
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-3xl font-bold ${getBatteryColor(batteryData.level)}`}>
+                      {batteryData.level}%
+                    </span>
                   </div>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  {batteryData.charging ? "Charging" : "Discharging"}
+                </p>
+              </div>
+              
+              {/* Power Flow */}
+              <div className="flex flex-col items-center justify-center">
+                <div className="flex items-center mb-2">
+                  {batteryData.charging ? (
+                    <ArrowDown className="h-6 w-6 text-green-500 mr-1" />
+                  ) : (
+                    <ArrowUp className="h-6 w-6 text-rose-500 mr-1" />
+                  )}
+                  <span className="text-2xl font-bold">
+                    {batteryData.powerFlow.toFixed(1)} kW
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {batteryData.charging ? "From solar" : "To home"}
+                </p>
+              </div>
+              
+              {/* Time Remaining */}
+              <div className="flex flex-col items-center justify-center">
+                <div className="flex items-center mb-2">
+                  <Clock className="h-5 w-5 mr-1 text-blue-500" />
+                  <span className="text-xl font-medium">
+                    {calculateTimeRemaining()}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {batteryData.charging ? "To full" : "Remaining"}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        {/* Power Chart */}
+        {/* System Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Sun className="h-5 w-5 mr-2 text-amber-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Today's Solar</p>
+                  <p className="text-xl font-bold">{systemStats.todayGeneration} kWh</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Home className="h-5 w-5 mr-2 text-blue-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Today's Usage</p>
+                  <p className="text-xl font-bold">{systemStats.todayConsumption} kWh</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-green-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Savings</p>
+                  <p className="text-xl font-bold">${systemStats.savings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Layers className="h-5 w-5 mr-2 text-sky-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Battery Health</p>
+                  <p className="text-xl font-bold">{systemStats.health}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Power Flow Chart */}
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Power Trends</CardTitle>
-            <div className="flex items-center space-x-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <LineChart className="h-5 w-5 mr-2 text-amber-500" />
+                Power Flow
+              </CardTitle>
               <Select value={timeFrame} onValueChange={handleTimeFrameChange}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Select Period" />
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Time frame" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
+                  <SelectItem value="day">24 Hours</SelectItem>
+                  <SelectItem value="week">7 Days</SelectItem>
+                  <SelectItem value="month">30 Days</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="p-0 pb-4">
-            <div className="h-72">
+          <CardContent>
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={powerData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  data={historicalData[timeFrame]}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis 
-                    dataKey="time" 
-                    stroke="#94a3b8" 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e2e8f0' }}
-                  />
-                  <YAxis 
-                    stroke="#94a3b8" 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e2e8f0' }}
-                    tickFormatter={(value) => `${value} kW`}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis dataKey="time" />
+                  <YAxis />
                   <Tooltip content={<CustomTooltip />} />
-                  <defs>
-                    <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                  <Area 
-                    type="monotone" 
-                    dataKey="power" 
-                    stroke="#3B82F6" 
-                    fillOpacity={1}
-                    fill="url(#colorPower)"
-                    isAnimationActive={true}
-                    animationDuration={1000}
+                  <Area
+                    type="monotone"
+                    dataKey="power"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="solarInput"
+                    stroke="#f97316"
+                    fill="#f97316"
+                    fillOpacity={0.2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="homeUsage"
+                    stroke="#ef4444"
+                    fill="#ef4444"
+                    fillOpacity={0.2}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            
-            <div className="flex justify-center mt-4 px-4">
-              <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center">
-                  <div className="h-3 w-6 bg-gradient-to-t from-blue-100 to-blue-500 rounded mr-2"></div>
-                  <span>Charging (- kW)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="h-3 w-6 bg-gradient-to-t from-rose-100 to-rose-500 rounded mr-2"></div>
-                  <span>Discharging (+ kW)</span>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
         
-        {/* Battery Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Battery Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Battery Health & Statistics</CardTitle>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-blue-500" />
+                Technical Details
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Battery Health</span>
-                  <div className="flex items-center">
-                    <span className="font-medium text-green-500">{batteryHealth}%</span>
-                    <div className="ml-2 w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-500 rounded-full"
-                        style={{ width: `${batteryHealth}%` }}
-                      ></div>
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Voltage</span>
+                  <span className="font-medium">{batteryData.voltage.toFixed(2)} V</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Cycle Count</span>
-                  <span className="font-medium">{cycleCount}</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Current</span>
+                  <span className="font-medium">{Math.abs(batteryData.current).toFixed(0)} mA</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature</span>
-                  <span className="font-medium">{temperature.toFixed(1)}°C</span>
+                  <span className="font-medium">{batteryData.temperature.toFixed(1)}°C</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Efficiency</span>
-                  <span className="font-medium">94.2%</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Capacity</span>
+                  <span className="font-medium">{systemStats.capacity} kWh</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Last Full Charge</span>
-                  <span className="font-medium">Yesterday, 8:42 PM</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Firmware Version</span>
-                  <span className="font-medium">v2.4.1</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Charge Cycles</span>
+                  <span className="font-medium">{systemStats.cycles}</span>
                 </div>
               </div>
             </CardContent>
@@ -521,40 +590,42 @@ const [allowFeedIn, setAllowFeedIn] = useState(true);
           
           <Card>
             <CardHeader>
-              <CardTitle>Energy Savings</CardTitle>
+              <CardTitle className="flex items-center">
+                <Settings className="h-5 w-5 mr-2 text-amber-500" />
+                System Settings
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center my-4">
-                <h3 className="text-3xl font-bold text-green-500">${savings.toFixed(2)}</h3>
-                <p className="text-muted-foreground">This month's savings</p>
-              </div>
-              
-              <div className="space-y-6 mt-8">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Grid Energy Offset</span>
-                  <span className="font-medium text-green-500">78%</span>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Power Mode</span>
+                  <span className="font-medium capitalize">{settings.powerMode}</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Peak Shaving</span>
-                  <span className="font-medium">4.2 kWh</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Reserve Level</span>
+                  <span className="font-medium">{settings.reserveLevel}%</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">CO₂ Reduction</span>
-                  <span className="font-medium">342 kg</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Grid Feed-in</span>
+                  <span className="font-medium">
+                    {settings.allowFeedIn ? "Allowed" : "Disabled"}
+                  </span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Savings YTD</span>
-                  <span className="font-medium text-green-500">$1,287.45</span>
+                <div className="pt-4">
+                  <button 
+                    onClick={() => window.location.href="/settings"}
+                    className="w-full py-2 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-md transition-colors"
+                  >
+                    Configure Settings
+                  </button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-        </div>
-        </div>
-      )}
+      </div>
+    </div>
+  );
+};
 
 export default BatteryDetails;

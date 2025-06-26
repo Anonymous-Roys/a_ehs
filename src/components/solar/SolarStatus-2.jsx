@@ -141,10 +141,10 @@ const SolarStatus = () => {
           
           {/* Metrics Row */}
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
-            <div className="text-center">
+            {/* <div className="text-center">
               <p className="text-xs text-muted-foreground">Capacity</p>
               <p className="font-medium text-sm">5.8 kW</p>
-            </div>
+            </div> */}
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Today's</p>
               <p className="font-medium text-sm">18.4 kWh</p>

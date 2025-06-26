@@ -12,7 +12,7 @@ import Controls from "./components/Controls";
 import Connection from "./pages/Connection";
 import { Toaster } from "sonner";
 import SolarDetailsPage from "./components/solar/SolarDetails";
-import BatteryDetails from "./pages/battery/BatteryDetails";
+// import BatteryDetails from "./pages/battery/BatteryDetails";
 import LoadDetails from "./pages/LoadDetails";
 import BatterySettings from "./pages/battery/BatterySettings";
 // import { ThemeProvider } from "@/components/theme-provider"
@@ -47,12 +47,12 @@ const App = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/a" element={<Alerts />} />
             <Route path="/c" element={<Controls />} />
-            <Route path="/solar-details" element={<SolarDetailsPage />} />
-            <Route path="/battery-details" element={<BatteryDetails />} />
+            {/* <Route path="/solar-details" element={<SolarDetailsPage />} /> */}
+            {/* <Route path="/battery-details" element={<BatteryDetails />} /> */}
             <Route path="/battery-details/battery-settings/" element={<BatterySettings />} />
-            <Route path="/grid-details" element={<BatteryDetails />} />
+            {/* <Route path="/grid-details" element={<BatteryDetails />} /> */}
             <Route path="/load-details" element={<LoadDetails />} />
-            <Route path="/wind-details" element={<BatteryDetails />} />
+            {/* <Route path="/wind-details" element={<BatteryDetails />} /> */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

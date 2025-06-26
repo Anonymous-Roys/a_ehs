@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import PowerFlowCard from "../components/PowerFlowCard";
 import BatteryStatus from "../components/battery/BatteryStatus";
-import SolarStatus from "../components/solar/SolarStatus";
+import SolarStatus from "../components/solar/SolarStatus-2";
 import GridStatus from "../components/GridStatus";
 import LoadStatus from "../components/LoadStatus";
 import ControlPanel from "../components/ControlPanel";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { BarChart3, Zap, TrendingUp, AlertTriangle } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import WeatherForecast from "../components/WeatherForecast";
@@ -16,33 +15,44 @@ import WindStatus from "../components/wind/WindStatus";
 
 const Index = () => {
   const [loading, setLoading] = useState(false);
-  const [activeMode, setActiveMode] = useState("SOLAR_HOME");
+  const [activeMode, setActiveMode] = useState("SOLAR_HOME_GRID");
   const [autoMode, setAutoMode] = useState(false);
+  const [simulatedHour, setSimulatedHour] = useState(6); // Start from 6 AM
 
   useEffect(() => {
     if (!autoMode) return;
-
-    // Simulate automatic mode switching based on time of day or conditions
+  
     const autoModeSimulation = setInterval(() => {
-      // Get current hour to simulate different power sources based on time
-      const hour = new Date().getHours();
-
-      // Simplified logic - just for demonstration
-      if (hour >= 8 && hour < 16) {
-        // Daytime: prioritize solar
-        setActiveMode("SOLAR_POWERHIVE_HOME");
-      } else if (hour >= 16 && hour < 20) {
-        // Evening: use battery
-        setActiveMode("POWERHIVE_HOME");
-      } else {
-        // Night: charge from grid when rates are lower
-        setActiveMode("GRID_HOME_POWERHIVE");
-      }
-    }, 10000); // Check every 10 seconds (for demo purposes)
-    // setLoading(false);
-
-    return () => clearInterval(autoModeSimulation);
+      setSimulatedHour((prevHour) => {
+        let nextHour = prevHour + 1;
+        if (nextHour > 23) nextHour = 0; // reset after 24 hours
+  
+        // Set active mode based on simulated hour
+        if (nextHour >= 6 && nextHour < 8) {
+          setActiveMode("SOLAR_HOME_GRID"); // Morning: Solar + Grid → Home
+        } else if (nextHour >= 8 && nextHour < 9) {
+          setActiveMode("SOLAR_POWERHIVE_HOME"); // Afternoon: Solar → Home + PowerHive (Battery)
+        } else if (nextHour >= 9 && nextHour < 10) {
+          setActiveMode("POWERHIVE_HOME"); // Evening: Battery → Home
+        } else {
+          setActiveMode("GRID_HOME"); // Night: Grid → Home first
+  
+          // Simulate grid outage after 2s
+          setTimeout(() => {
+            setActiveMode("POWERHIVE_HOME"); // Battery → Home fallback
+          }, 6000);
+        }
+  
+        return nextHour;
+      });
+    }, 5000); // Every 5 seconds, simulate 1 hour
+  
+    return () => clearInterval(autoModeSimulation); // Cleanup
   }, [autoMode]);
+  
+  
+
+
   if (loading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
@@ -80,7 +90,6 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <PowerFlowCard activeMode={activeMode} />
           <ControlPanel
            deviceId="device001"
             activeMode={activeMode}
@@ -88,8 +97,9 @@ const Index = () => {
             autoMode={autoMode}
             setAutoMode={setAutoMode}
           />
-          <WeatherForecast />
-          <QuickStats />
+          <PowerFlowCard activeMode={activeMode} />
+          {/* <WeatherForecast />
+          <QuickStats /> */}
         </div>
       </main>
     </div>

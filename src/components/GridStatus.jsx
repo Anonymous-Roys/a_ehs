@@ -124,12 +124,12 @@ const GridStatus = () => {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Current Usage</span>
               <span className={`font-medium ${importing ? 'text-indigo-500' : 'text-gray-500'}`}>
-                {gridUsage}%
+                {0}%
               </span>
             </div>
             <div className="relative h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
               <Progress 
-                value={gridUsage} 
+                value={0} 
                 className="h-2 transition-all duration-1000"
                 style={{
                   background: `linear-gradient(90deg, #6366F1 0%, #818CF8 ${gridUsage}%)`,
@@ -166,16 +166,16 @@ const GridStatus = () => {
           <div className="w-full grid grid-cols-3 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Voltage</p>
-              <p className="font-medium text-sm">{voltage} V</p>
+              <p className="font-medium text-sm">{0.0} V</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Frequency</p>
-              <p className="font-medium text-sm">{frequency} Hz</p>
+              <p className="font-medium text-sm">{0.0} Hz</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
               <p className={`font-medium text-sm ${importing ? 'text-indigo-500' : 'text-gray-500'}`}>
-                {importing ? getGridPower() : "0.0"} kW
+                {importing ? "0.0" : "0.0"} kW
               </p>
             </div>
           </div>

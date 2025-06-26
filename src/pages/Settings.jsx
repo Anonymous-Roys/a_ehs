@@ -15,8 +15,10 @@ import {
   Wifi, 
   Clock, 
   RefreshCw,
-  Save
+  Save,
+  Bolt
 } from "lucide-react";
+import { toast } from "sonner";
 
 const Settings = () => {
   // const { toast } = useToast();
@@ -203,6 +205,23 @@ const Settings = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card >
+              <CardHeader>
+                <CardTitle className="text-lg">Power Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center p-8">
+                  <Bolt className="h-16 w-16 text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    Advanced power distribution controls are available for authorized technicians only
+                  </p>
+                  <Button className="mt-4" onClick={() => toast.error("Access restricted to authorized personnel")}>
+                    Request Access
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
               
               <div className="lg:col-span-2">
                 <Button className="w-full" size="lg" onClick={handleSave} disabled={loading}>
@@ -393,7 +412,7 @@ const Settings = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="system-id">System ID</Label>
-                    <Input id="system-id" defaultValue="ECORES-10085" readOnly className="bg-muted" />
+                    <Input id="system-id" defaultValue="device001" readOnly className="bg-muted" />
                   </div>
                   
                   <div className="space-y-2">

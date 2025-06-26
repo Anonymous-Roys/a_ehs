@@ -75,7 +75,9 @@ const PowerFlowCard = ({ activeMode = "SOLAR_HOME" }) => {
         newFlowStates.gridActive = true;
         newFlowStates.gridExport = true;
         newFlowStates.solarToHome = true;
-        newFlowStates.solarToGrid = true;
+        newFlowStates.gridActive = true;
+        newFlowStates.gridImport = true;
+        newFlowStates.gridToHome = true;
         break;
         
       case "GRID_HOME":
@@ -144,7 +146,7 @@ const PowerFlowCard = ({ activeMode = "SOLAR_HOME" }) => {
   };
 
   return (
-    <Card className="col-span-full energy-card overflow-hidden relative">
+    <Card className="col-span-2 energy-card overflow-hidden relative">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-medium flex items-center gap-2">
           Power Flow
