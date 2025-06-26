@@ -260,7 +260,7 @@ const PowerFlowCard = ({ activeMode = "SOLAR_HOME" }) => {
                 fontWeight="bold" 
                 textAnchor="middle"
               >
-                {Math.round(batteryLevel)}%
+                {Math.round(83.3)}%
               </text>
               
               {/* Label */}
