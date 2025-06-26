@@ -73,7 +73,7 @@ const Index = () => {
           <h1 className="text-3xl font-medium tracking-tight mb-2">PowerHive</h1>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 font-normal">
-              Charging • 27% charged
+              Charging • 83.3% charged
             </Badge>
             <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 font-normal">
               Solar Active
