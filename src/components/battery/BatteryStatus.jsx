@@ -302,7 +302,7 @@ const BatteryStatus = () => {
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
               <p className={`font-medium text-sm ${charging ? 'text-blue-500' : 'text-rose-500'}`}>
-                {charging ? "+" : "-"}{20} W
+                {charging ? "+" : "+"}{20} W
               </p>
             </div>
           </div>

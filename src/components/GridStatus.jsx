@@ -175,7 +175,7 @@ const GridStatus = () => {
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Power</p>
               <p className={`font-medium text-sm ${importing ? 'text-indigo-500' : 'text-gray-500'}`}>
-                {importing ? "20.0" : "20.0"} kW
+                {importing ? "20.0" : "20.0"} W
               </p>
             </div>
           </div>
