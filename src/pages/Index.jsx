@@ -98,8 +98,8 @@ const Index = () => {
             setAutoMode={setAutoMode}
           />
           <PowerFlowCard activeMode={activeMode} />
-          {/* <WeatherForecast />
-          <QuickStats /> */}
+          <WeatherForecast />
+          <QuickStats />
         </div>
       </main>
     </div>
