@@ -132,11 +132,7 @@ const BatteryStatus = () => {
     }
   };
 
-  // Function to manually trigger data fetch (for testing)
-  const manualRefresh = () => {
-    console.log("Manual refresh triggered");
-    fetchLatestBatteryData();
-  };
+
 
   // Fetch data on component mount and set interval for periodic updates
   useEffect(() => {
@@ -146,10 +142,10 @@ const BatteryStatus = () => {
     // Set interval for regular updates
     const interval = setInterval(() => {
       fetchLatestBatteryData();
-    }, 3000); // Fetch every 30 seconds
+    }, 99000); // Fetch every 30 seconds
     
     return () => clearInterval(interval);
-  }, []);
+  }, [10000]);
 
   // Get status color based on battery level
   const getBatteryColor = () => {
@@ -279,7 +275,7 @@ const BatteryStatus = () => {
                   background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc ${batteryLevel}%)`,
                 }}
               />
-              {/* Animated glowing effect for the progress bar */}
+              
               {charging && (
                 <div 
                   className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent to-white/30 dark:to-white/20 animate-shimmer"
@@ -306,21 +302,6 @@ const BatteryStatus = () => {
               </p>
             </div>
           </div>
-          
-          {/* Debug button - for testing only */}
-          {/* <button 
-            onClick={manualRefresh}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Data
-          </button> */}
-          
-          {/* Raw data display - for testing only */}
-          {/* {rawData && (
-            <div className="w-full text-left bg-slate-100 dark:bg-slate-800 p-2 rounded text-xs overflow-auto">
-              <pre>{JSON.stringify(rawData, null, 2)}</pre>
-            </div>
-          )} */}
           
           {isLoading && (
             <div className="absolute inset-0 bg-slate-100/50 dark:bg-slate-800/50 flex items-center justify-center">

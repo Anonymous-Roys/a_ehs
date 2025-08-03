@@ -11,31 +11,31 @@ const GridStatus = () => {
   // const [usageHistory, setUsageHistory] = useState([18, 19, 20, 21, 22]);
   // const [showDetails, setShowDetails] = useState(false);
   
-  useEffect(() => {
-    // Simulate grid usage changes
-    const interval = setInterval(() => {
-      const newValue = gridUsage + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 2);
-      const boundedValue = Math.max(0, Math.min(80, newValue));
-      setGridUsage(boundedValue);
-      setImporting(boundedValue > 5);
+  // useEffect(() => {
+  //   // Simulate grid usage changes
+  //   const interval = setInterval(() => {
+  //     const newValue = gridUsage + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 2);
+  //     const boundedValue = Math.max(0, Math.min(80, newValue));
+  //     setGridUsage(boundedValue);
+  //     setImporting(boundedValue > 5);
       
-      // Simulate small voltage fluctuations
-      setVoltage(Math.round((238 + (Math.random() - 0.5) * 4) * 10) / 10);
+  //     // Simulate small voltage fluctuations
+  //     setVoltage(Math.round((238 + (Math.random() - 0.5) * 4) * 10) / 10);
       
-      // Simulate small frequency fluctuations
-      setFrequency(Math.round((50 + (Math.random() - 0.5) * 0.4) * 10) / 10);
+  //     // Simulate small frequency fluctuations
+  //     setFrequency(Math.round((50 + (Math.random() - 0.5) * 0.4) * 10) / 10);
       
-      // Update usage history
-      setUsageHistory(prev => {
-        if (prev.length >= 10) {
-          return [...prev.slice(1), boundedValue];
-        }
-        return [...prev, boundedValue];
-      });
-    }, 4000);
+  //     // Update usage history
+  //     setUsageHistory(prev => {
+  //       if (prev.length >= 10) {
+  //         return [...prev.slice(1), boundedValue];
+  //       }
+  //       return [...prev, boundedValue];
+  //     });
+  //   }, 4000);
     
-    return () => clearInterval(interval);
-  }, [gridUsage]);
+  //   return () => clearInterval(interval);
+  // }, [gridUsage]);
 
   const getGridPower = () => {
     return (gridUsage / 100 * 10).toFixed(1);

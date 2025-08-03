@@ -12,70 +12,89 @@ import { modeGroups } from "../lib/data";
 
 
 const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMode }) => {
-  const [expandedGroup, setExpandedGroup] = useState(null);
+ const [expandedGroup, setExpandedGroup] = useState(null);
+  const [isSendingCommand, setIsSendingCommand] = useState(false);
 
-
-
-  // Find which group the active mode belongs to
   const findActiveGroup = () => {
     return modeGroups.find(group => 
       group.modes.some(mode => mode.id === activeMode)
     )?.id || null;
   };
 
-  const handleModeChange = async (mode) => {
-    if (autoMode) return; // Prevent changes in Auto Mode
-  
-    setActiveMode(mode);
-  
+  const sendCommand = async (command, parameters = {}) => {
+    setIsSendingCommand(true);
     try {
-      const response = await fetch("https://powerhive-backend.onrender.com/api/command/send", {
+      const response = await fetch("https://powerhive-backend-annex.onrender.com/api/commands", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ deviceId, mode })
+        body: JSON.stringify({
+          deviceId,
+          command,
+          parameters
+        })
       });
-  
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      console.log(isSendingCommand);
+  console.log(command, parameters);
       const result = await response.json();
-  
+      return result;
+    } catch (error) {
+      console.error("Command failed:", error);
+      throw error;
+    } finally {
+      setIsSendingCommand(false);
+    }
+  };
+
+  const handleModeChange = async (mode) => {
+    if (autoMode) return;
+    
+    try {
+      const result = await sendCommand("SET_MODE", { mode });
+      
       if (result.success) {
-        toast("Energy Mode Changed", {
-          description: `Switched to ${mode}`,
-          duration: 3000,
+        setActiveMode(mode);
+        toast.success("Mode Changed", {
+          description: `Successfully switched to ${mode}`,
         });
       } else {
-        throw new Error(result.message || "Unknown error");
+        toast.error("Failed to change mode", {
+          description: result.message || "Unknown error occurred",
+        });
       }
-  
     } catch (error) {
-      toast("Error", {
-        description: `Failed to send command: ${error.message}`,
-        duration: 3000,
+      toast.error("Command Failed", {
+        description: error.message || "Failed to send command to device",
       });
     }
   };
-  
 
-  const toggleAutoMode = () => {
-    setAutoMode((prev) => {
-      const newMode = !prev;
+  const toggleAutoMode = async () => {
+    const newMode = !autoMode;
+    const command = newMode ? "ENABLE_AUTO_MODE" : "DISABLE_AUTO_MODE";
+    
+    try {
+      const result = await sendCommand(command);
       
-      // If turning on auto mode, send the AUTO_MODE command
-      if (newMode) {
-        // sendCommandToESP32("AUTO_MODE");
+      if (result.success) {
+        setAutoMode(newMode);
         setExpandedGroup(null);
+        toast.success(newMode ? "Auto Mode Activated" : "Manual Mode Activated", {
+          description: newMode
+            ? "System will automatically optimize energy usage"
+            : "You can now manually select energy modes",
+        });
       }
-      
-      toast(newMode ? "Auto Mode Activated" : "Manual Mode Activated", {
-        description: newMode
-          ? "System will automatically choose the optimal energy mode."
-          : "You can now manually select energy modes.",
-        duration: 3000,
+    } catch (error) {
+      toast.error("Failed to toggle mode", {
+        description: error.message || "Could not change auto mode setting",
       });
-      
-      return newMode;
-    });
+    }
   };
 
   const toggleGroup = (groupId) => {

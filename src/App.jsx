@@ -9,7 +9,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Alerts from "./pages/Alerts";
 import Controls from "./components/Controls";
-import Connection from "./pages/Connection";
+// import Connection from "./pages/Connection";
 import { Toaster } from "sonner";
 import SolarDetailsPage from "./components/solar/SolarDetails";
 import BatteryDetails from "./pages/battery/BatteryDetails";

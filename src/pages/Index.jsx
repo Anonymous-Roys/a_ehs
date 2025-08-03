@@ -40,12 +40,12 @@ const Index = () => {
           // Simulate grid outage after 2s
           setTimeout(() => {
             setActiveMode("POWERHIVE_HOME"); // Battery → Home fallback
-          }, 6000);
+          }, 76000);
         }
   
         return nextHour;
       });
-    }, 5000); // Every 5 seconds, simulate 1 hour
+    }, 55000); // Every 5 seconds, simulate 1 hour
   
     return () => clearInterval(autoModeSimulation); // Cleanup
   }, [autoMode]);
@@ -57,7 +57,7 @@ const Index = () => {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
         <div className="animate-pulse-slow flex flex-col items-center">
-          <Zap className="h-12 w-12 text-primary mb-4" />
+          {/* <Zap className="h-12 w-12 text-primary mb-4" /> */}
           <h2 className="text-xl font-medium">Loading Dashboard</h2>
         </div>
       </div>
