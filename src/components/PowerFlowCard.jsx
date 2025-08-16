@@ -146,7 +146,7 @@ const PowerFlowCard = ({ activeMode = "SOLAR_HOME" }) => {
   };
 
   return (
-    <Card className="col-span-2 energy-card overflow-hidden relative">
+    <Card className="md:col-span-2 energy-card overflow-hidden relative">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-medium flex items-center gap-2">
           Power Flow
