@@ -4,7 +4,7 @@ import { AlertTriangle, BarChart3, TrendingUp, Zap } from 'lucide-react'
 
 const QuickStats = () => {
   return (
-    <Card className="col-span-1 md:col-span-1 energy-card">
+    <Card className="col-span-1 energy-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-xl font-medium">Quick Stats</CardTitle>
             </CardHeader>

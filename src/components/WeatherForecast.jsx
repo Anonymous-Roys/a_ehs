@@ -33,7 +33,7 @@ const getWeatherIcon = (condition) => {
 
 const WeatherForecast = () => {
   return (
-    <Card>
+    <Card className="md:col-span-2">
       <CardHeader>
         <CardTitle className="text-lg">Weather & Solar Forecast</CardTitle>
       </CardHeader>
