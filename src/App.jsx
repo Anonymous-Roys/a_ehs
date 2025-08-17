@@ -48,7 +48,7 @@ const App = () => {
             <Route path="/a" element={<Alerts />} />
             <Route path="/c" element={<Controls />} />
             <Route path="/solar-details" element={<SolarDetailsPage />} />
-            <Route path="/battery-details" element={<BatteryDetails />} />
+            {/* <Route path="/battery-details" element={<BatteryDetails />} /> */}
             <Route path="/battery-details/battery-settings/" element={<BatterySettings />} />
             {/* <Route path="/grid-details" element={<BatteryDetails />} /> */}
             <Route path="/load-details" element={<LoadDetails />} />

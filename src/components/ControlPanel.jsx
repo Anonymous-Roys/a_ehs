@@ -3,17 +3,53 @@ import { Button } from "./ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import ControlToggle from "./ControlToggle";
 import { toast } from "sonner";
-import { useState } from "react";
-import {  AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { modeGroups } from "../lib/data";
-
-
-
-
+import mqtt from "mqtt";
 
 const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMode }) => {
- const [expandedGroup, setExpandedGroup] = useState(null);
+  const [expandedGroup, setExpandedGroup] = useState(null);
   const [isSendingCommand, setIsSendingCommand] = useState(false);
+  const [client, setClient] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+
+  // MQTT connection setup
+  useEffect(() => {
+    const mqttClient = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+    
+    mqttClient.on("connect", () => {
+      setConnectionStatus("Connected");
+      console.log("MQTT Connected");
+      // Subscribe to status topic
+      mqttClient.subscribe("powerhive/device001/status");
+    });
+
+    mqttClient.on("message", (topic, message) => {
+      if (topic === "powerhive/device001/status") {
+        const status = JSON.parse(message.toString());
+        console.log("Status update:", status);
+        // Here you could update UI based on device status
+      }
+    });
+
+    mqttClient.on("error", (err) => {
+      console.error("MQTT Error:", err);
+      setConnectionStatus("Error");
+    });
+
+    mqttClient.on("close", () => {
+      setConnectionStatus("Disconnected");
+    });
+
+    setClient(mqttClient);
+
+    return () => {
+      if (mqttClient) {
+        mqttClient.end();
+      }
+    };
+  }, []);
 
   const findActiveGroup = () => {
     return modeGroups.find(group => 
@@ -21,31 +57,40 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
     )?.id || null;
   };
 
-  const sendCommand = async (command, parameters = {}) => {
+  const sendCommand = async (command) => {
+    if (!client || connectionStatus !== "Connected") {
+      toast.error("MQTT Not Connected", {
+        description: "Cannot send command - MQTT connection is not active",
+      });
+      return;
+    }
+
     setIsSendingCommand(true);
     try {
-      const response = await fetch("https://powerhive-backend-annex.onrender.com/api/commands", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          deviceId,
-          command,
-          parameters
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      console.log(isSendingCommand);
-  console.log(command, parameters);
-      const result = await response.json();
-      return result;
+      // Publish the command to the MQTT topic
+      client.publish(
+        "powerhive/device001/power/mode", 
+        command,
+        { qos: 1 },
+        (err) => {
+          if (err) {
+            console.error("Publish error:", err);
+            toast.error("Command Failed", {
+              description: "Could not send command to device",
+            });
+          } else {
+            console.log("Command sent:", command);
+            toast.success("Command Sent", {
+              description: `Mode changed to ${command}`,
+            });
+          }
+        }
+      );
     } catch (error) {
       console.error("Command failed:", error);
-      throw error;
+      toast.error("Command Failed", {
+        description: error.message || "Failed to send command",
+      });
     } finally {
       setIsSendingCommand(false);
     }
@@ -53,48 +98,23 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
 
   const handleModeChange = async (mode) => {
     if (autoMode) return;
-    
-    try {
-      const result = await sendCommand("SET_MODE", { mode });
-      
-      if (result.success) {
-        setActiveMode(mode);
-        toast.success("Mode Changed", {
-          description: `Successfully switched to ${mode}`,
-        });
-      } else {
-        toast.error("Failed to change mode", {
-          description: result.message || "Unknown error occurred",
-        });
-      }
-    } catch (error) {
-      toast.error("Command Failed", {
-        description: error.message || "Failed to send command to device",
-      });
-    }
+    await sendCommand(mode);
+    setActiveMode(mode);
   };
 
   const toggleAutoMode = async () => {
     const newMode = !autoMode;
-    const command = newMode ? "ENABLE_AUTO_MODE" : "DISABLE_AUTO_MODE";
+    const command = newMode ? "AUTO" : "MANUAL";
     
-    try {
-      const result = await sendCommand(command);
-      
-      if (result.success) {
-        setAutoMode(newMode);
-        setExpandedGroup(null);
-        toast.success(newMode ? "Auto Mode Activated" : "Manual Mode Activated", {
-          description: newMode
-            ? "System will automatically optimize energy usage"
-            : "You can now manually select energy modes",
-        });
-      }
-    } catch (error) {
-      toast.error("Failed to toggle mode", {
-        description: error.message || "Could not change auto mode setting",
-      });
-    }
+    await sendCommand(command);
+    setAutoMode(newMode);
+    setExpandedGroup(null);
+    
+    toast.success(newMode ? "Auto Mode Activated" : "Manual Mode Activated", {
+      description: newMode
+        ? "System will automatically optimize energy usage"
+        : "You can now manually select energy modes",
+    });
   };
 
   const toggleGroup = (groupId) => {
@@ -102,20 +122,23 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
     setExpandedGroup(expandedGroup === groupId ? null : groupId);
   };
 
-  // Find the active mode's description
   const getActiveModeDescription = () => {
     const allModes = modeGroups.flatMap(g => g.modes);
     return allModes.find(m => m.id === activeMode)?.description || activeMode;
   };
 
-  // Get the active mode's group and its color
   const activeGroupId = findActiveGroup();
   const activeGroup = modeGroups.find(g => g.id === activeGroupId);
 
   return (
     <Card className="col-span-full md:col-span-1 energy-card text-black">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-medium">Energy Control</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl font-medium">Energy Control</CardTitle>
+          <div className={`h-2 w-2 rounded-full ${
+            connectionStatus === "Connected" ? "bg-green-500" : "bg-red-500"
+          }`}></div>
+        </div>
       </CardHeader>
       <CardContent className="pb-6">
         <div className="space-y-4">
@@ -202,6 +225,9 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
               {autoMode 
                 ? "Automatic mode is enabled. The system will optimize energy usage based on availability and cost."
                 : `Manual mode: ${getActiveModeDescription()}`}
+            </p>
+            <p className="text-xs mt-2">
+              MQTT: {connectionStatus}
             </p>
           </div>
         </div>
