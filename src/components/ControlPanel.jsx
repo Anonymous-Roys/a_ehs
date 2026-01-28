@@ -131,10 +131,10 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
   const activeGroup = modeGroups.find(g => g.id === activeGroupId);
 
   return (
-    <Card className="col-span-full md:col-span-1 energy-card text-black">
+    <Card className="col-span-full md:col-span-1 energy-card">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-medium">Energy Control</CardTitle>
+          <CardTitle className="text-xl font-medium text-gray-900 dark:text-white">Energy Control</CardTitle>
           <div className={`h-2 w-2 rounded-full ${
             connectionStatus === "Connected" ? "bg-green-500" : "bg-red-500"
           }`}></div>
@@ -143,7 +143,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
       <CardContent className="pb-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Auto Mode</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">Auto Mode</span>
             <ControlToggle 
               checked={autoMode} 
               onCheckedChange={toggleAutoMode} 
@@ -160,7 +160,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
                   <div key={group.id} className="rounded-lg overflow-hidden transition-all duration-200">
                     <Button 
                       variant="outline"
-                      className={`flex justify-between items-center h-14 px-4 w-full ${isActiveInGroup ? group.activeColor : group.color} hover:${group.activeColor}`}
+                      className={`flex justify-between items-center h-14 px-4 w-full text-gray-900 dark:text-white border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 ${isActiveInGroup ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' : 'bg-white dark:bg-slate-800'}`}
                       onClick={() => toggleGroup(group.id)}
                     >
                       <div className="flex items-center">
@@ -168,7 +168,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
                         <div className="flex flex-col items-start">
                           <span className="text-sm font-medium">{group.name}</span>
                           {isActiveInGroup && !isExpanded && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {group.modes.find(m => m.id === activeMode)?.label}
                             </span>
                           )}
@@ -189,7 +189,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className={`p-2 ${group.color} border-t border-gray-200`}>
+                          <div className="p-2 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-200 dark:border-slate-600">
                             {group.modes.map((mode) => (
                               <motion.div
                                 key={mode.id}
@@ -199,7 +199,7 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
                               >
                                 <Button 
                                   variant={activeMode === mode.id ? "subtle" : "ghost"}
-                                  className={`flex justify-between items-center h-10 px-3 w-full my-1 text-left ${activeMode === mode.id ? group.activeColor : ""}`}
+                                  className={`flex justify-between items-center h-10 px-3 w-full my-1 text-left text-gray-900 dark:text-white hover:bg-white dark:hover:bg-slate-600 ${activeMode === mode.id ? 'bg-blue-100 dark:bg-blue-900/30' : ''}`}
                                   onClick={() => handleModeChange(mode.id)}
                                 >
                                   <div className="flex items-center">
@@ -219,14 +219,14 @@ const ControlPanel = ({ deviceId, activeMode, setActiveMode, autoMode, setAutoMo
             </div>
           )}
           
-          <div className={`p-4 rounded-lg text-sm ${activeGroup?.color || 'bg-secondary'} border`}>
-            <p className="font-medium mb-2">Current Status</p>
-            <p className="text-muted-foreground">
+          <div className="p-4 rounded-lg text-sm bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600">
+            <p className="font-medium mb-2 text-gray-900 dark:text-white">Current Status</p>
+            <p className="text-gray-600 dark:text-gray-300">
               {autoMode 
                 ? "Automatic mode is enabled. The system will optimize energy usage based on availability and cost."
                 : `Manual mode: ${getActiveModeDescription()}`}
             </p>
-            <p className="text-xs mt-2">
+            <p className="text-xs mt-2 text-gray-500 dark:text-gray-400">
               MQTT: {connectionStatus}
             </p>
           </div>

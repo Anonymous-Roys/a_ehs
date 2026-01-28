@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart3, Settings } from "lucide-react";
+import { Home, BarChart3, Settings, DollarSign, Target, Zap, FileText, Wrench } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Header = () => {
@@ -27,6 +27,16 @@ const Header = () => {
         return "Energy Analytics";
       case "/settings":
         return "Settings";
+      case "/cost-savings":
+        return "Cost & Savings";
+      case "/energy-goals":
+        return "Energy Goals";
+      case "/load-scheduling":
+        return "Load Scheduling";
+      case "/reports":
+        return "Reports";
+      case "/maintenance":
+        return "Maintenance";
       default:
         return "PowerHive";
     }
@@ -68,6 +78,61 @@ const Header = () => {
             <Link to="/analytics" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Analytics</span>
+            </Link>
+          </Button>
+          <Button 
+            variant={location.pathname === "/cost-savings" ? "default" : "ghost"} 
+            size="sm" 
+            asChild
+            className="rounded-full px-4"
+          >
+            <Link to="/cost-savings" className="flex items-center space-x-2">
+              <DollarSign className="h-4 w-4" />
+              <span>Savings</span>
+            </Link>
+          </Button>
+          <Button 
+            variant={location.pathname === "/energy-goals" ? "default" : "ghost"} 
+            size="sm" 
+            asChild
+            className="rounded-full px-4"
+          >
+            <Link to="/energy-goals" className="flex items-center space-x-2">
+              <Target className="h-4 w-4" />
+              <span>Goals</span>
+            </Link>
+          </Button>
+          <Button 
+            variant={location.pathname === "/load-scheduling" ? "default" : "ghost"} 
+            size="sm" 
+            asChild
+            className="rounded-full px-4"
+          >
+            <Link to="/load-scheduling" className="flex items-center space-x-2">
+              <Zap className="h-4 w-4" />
+              <span>Scheduling</span>
+            </Link>
+          </Button>
+          <Button 
+            variant={location.pathname === "/reports" ? "default" : "ghost"} 
+            size="sm" 
+            asChild
+            className="rounded-full px-4"
+          >
+            <Link to="/reports" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>Reports</span>
+            </Link>
+          </Button>
+          <Button 
+            variant={location.pathname === "/maintenance" ? "default" : "ghost"} 
+            size="sm" 
+            asChild
+            className="rounded-full px-4"
+          >
+            <Link to="/maintenance" className="flex items-center space-x-2">
+              <Wrench className="h-4 w-4" />
+              <span>Maintenance</span>
             </Link>
           </Button>
           <Button 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Header from "../components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -38,10 +37,8 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-6 pt-28 animate-fade-in">
+    <div className="min-h-screen pb-20">
+      <main className="max-w-7xl mx-auto px-6 py-8 animate-fade-in">
         <h1 className="text-3xl font-medium tracking-tight mb-10">Settings</h1>
         
         <Tabs defaultValue="system" className="mb-10">
